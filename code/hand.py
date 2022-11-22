@@ -6,7 +6,9 @@ mp_drawing_styles = mp.solutions.drawing_styles
 mp_hands = mp.solutions.hands
 
 # For webcam input:
-cap = cv2.VideoCapture(0) # https://appdividend.com/2022/10/18/python-cv2-videocapture/
+# cap = cv2.VideoCapture(0) # https://appdividend.com/2022/10/18/python-cv2-videocapture/
+# cap = cv2.VideoCapture(1) # 2nd camera via usb
+cap = cv2.VideoCapture(2) # 3rd camera via usb
 # cap = cv2.VideoCapture("http://10.9.104.149:8080/video") # ip webcam: works pretty well
 """
  - maybe TRY TO SWITCH TO GPU first (CPU may be slow for real time video)
@@ -47,7 +49,17 @@ with mp_hands.Hands(
     image.flags.writeable = True
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     if results.multi_hand_landmarks:
+    # if results.multi_hand_world_landmarks:
       for hand_landmarks in results.multi_hand_landmarks:
+      # for hand_landmarks in results.multi_hand_world_landmarks:
+        # import time
+        # time.sleep(2)
+        image_width, image_height, _ = image.shape
+        print(
+          f'Index finger tip coordinates: (',
+          f'{hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP].x * image_width}, '
+          f'{hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP].y * image_height})'
+        )
         mp_drawing.draw_landmarks(
             image,
             hand_landmarks,
