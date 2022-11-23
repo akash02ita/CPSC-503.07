@@ -1,23 +1,18 @@
 ## Sources
-- https://gist.github.com/joinAero/1f76844278f141cea8338d1118423648#file-camera-py
-  - fails
-- https://www.quora.com/How-can-I-execute-OpenCV-Python-Kinect-codes
-- https://github.com/Kinect/PyKinect2
-  - tried all possible ways: keeps failing
-- https://stackoverflow.com/questions/51971493/how-to-print-a-kinect-frame-in-opencv-using-openni-bindings
-  - do not konw what Redist has to do with it
-- https://naman5.wordpress.com/2014/06/24/experimenting-with-kinect-using-opencv-python-and-open-kinect-libfreenect/
-  - Windows support?
-- https://github.com/OpenKinect/libfreenect
 - current choice: https://github.com/Kinect/PyKinect2
+- another choice: https://github.com/KonstantinosAng/PyKinect2-Mapper-Functions
+  - uses pykinect2 library to apply coordinate alignment.
   
 ## Notes
-**cv2.Videocapture(number)** _does not work_ with Kinect v2. So something like PyKinect2 should be used to handle that. However currently all/most-of-the experiments failed.
+**cv2.Videocapture(number)** _does not work_ with Kinect v2. So something like PyKinect2 should be used to handle that. Successfully working with PyKinect2.
+
+Regarding OpenKinect, which is libfreenect (for Kinect) and libfreenect2 (for Kinect v2) there are python wrappers such as **freenect2** and **pylibfreenect2**. However those do not seem to work with Python 3.7 64 bit (which is minimum requirement for **mediapipe**). PyKinect2 seems the best choice so far.
 
 
 ## Status
-Not currently working, after several attempts. Python 3.6 version seemed to work but was tested on 32 bit. 32 bit python does not support mediapipe pip install.
+Working with **PyKinect2**. Using Python 3.7 64 bit at the moment.
 
-Python 3.6 64bit not tested yet.
+So this is the procedure:
+- do not use `pip install pykinect2`. Seems outdated or not working with 64bit Python.
+- rather just use/import `PyKinectRuntime.py` and `PyKinectV2.py` from the __pykinect2__ github repository. That works with Python 3.7 64bit (tested).
 
-Also seems like anaconda is not really needed but rather Python 3.6 is more than enough. Also replacing "PyKinect2\pykinect2\PyKinectRuntime.py" and "PyKinect2\pykinect2\PyKinectV2.py" in the 'virtual environment' location of these 2 files seems to fix most of the issues. For 64bit python versions some extra changes are needed. The github repository has some **issues** that talks about this.
