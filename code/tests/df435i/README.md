@@ -16,3 +16,8 @@ Python 3.9 is used. As of 17 Nov 2022, python 3.9 is the latest python version s
 
 ## Source
 - https://dev.intelrealsense.com/docs/python2
+
+
+## Examples tested
+- `working_example1.py`: a normal hand tracking approach with no post-processing. This seems to give issues of frequent inaccurate values, due to depth noise and possible amount of 'holes'.
+- `working_example2.py`: better than before and seems like post-processing helps on getting better and more accurate values. Frame rate seems still around 30fps.
