@@ -1,0 +1,7 @@
+{
+    "python.linting.enabled": false,
+    "python.analysis.extraPaths": [
+        "./PyKinect2",
+        "./PyKinect2-Mapper-Functions"
+    ]
+}

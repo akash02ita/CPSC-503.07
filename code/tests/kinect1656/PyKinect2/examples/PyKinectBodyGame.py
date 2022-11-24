@@ -120,6 +120,10 @@ class BodyGameRuntime(object):
         target_surface.unlock()
 
     def run(self):
+        import time
+        tot_frames = 0
+        fps = 0
+        start = time.time()
         # -------- Main Program Loop -----------
         while not self._done:
             # --- Main event loop
@@ -136,8 +140,17 @@ class BodyGameRuntime(object):
             # --- Getting frames and drawing  
             # --- Woohoo! We've got a color frame! Let's fill out back buffer surface with frame's data 
             if self._kinect.has_new_color_frame():
+                tot_frames += 1
                 frame = self._kinect.get_last_color_frame()
                 self.draw_color_frame(frame, self._frame_surface)
+
+                if tot_frames == 5:
+                    end = time.time()
+                    tot_time = end - start
+                    fps = round(tot_frames/tot_time, 2)
+                    tot_frames = 0
+                    start = time.time()
+                    print(f'FPS: {fps}')
                 frame = None
 
             # --- Cool! We have a body frame, so can get skeletons

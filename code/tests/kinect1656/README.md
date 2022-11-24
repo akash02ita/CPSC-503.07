@@ -16,3 +16,8 @@ So this is the procedure:
 - do not use `pip install pykinect2`. Seems outdated or not working with 64bit Python.
 - rather just use/import `PyKinectRuntime.py` and `PyKinectV2.py` from the __pykinect2__ github repository. That works with Python 3.7 64bit (tested).
 
+
+## Examples
+- `test/test2.py` is a working example with hand tracking. The current issue is that the FPS drops from 30 to 20 when using mediapipe **hands.process()**. The issue persists despite lowering resolution of numpy array. However this issue was not encountered with __intel realsense d453i__: FPS stays between 22-30, even after post-processing.
+  - tests performed under **Ryzen 5500U** and **12gb RAM**.
+  - in d345i, using Python 3.9 64bit, whereas in kinect1656 using Python 3.7 64bit. Not sure if (1) mediapipe performance depends on different python versions and/or (2) mediapipe version is different with Python 3.7.

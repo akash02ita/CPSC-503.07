@@ -9,7 +9,7 @@ from pykinect2 import PyKinectRuntime
 import numpy as np
 import cv2
 
-kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Depth)
+kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Color)
 
 import time
 tot_frames = 0
@@ -18,22 +18,12 @@ start = time.time()
 
 while True:
     # --- Getting frames and drawing
-    if kinect.has_new_depth_frame():
+    if kinect.has_new_color_frame():
         tot_frames += 1
-
-        frame = kinect.get_last_depth_frame()
-        frameD = kinect._depth_frame_data
+        
+        frame = kinect.get_last_color_frame()
         frame = frame.astype(np.uint8)
-        frame = np.reshape(frame, (424, 512))
-        frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2RGB)
-        def click_event(event, x, y, flags, param):
-            if event == cv2.EVENT_LBUTTONDOWN:
-                print(x, y)
-            if event == cv2.EVENT_RBUTTONDOWN:
-                Pixel_Depth = frameD[((y * 512) + x)]
-                print(Pixel_Depth)
-        ##output = cv2.bilateralFilter(output, 1, 150, 75)
-
+        frame = np.reshape(frame, (1080, 1920, 4))
         # instead of re-calculating fps too frequenty take more frames
             # we don't want instanteneous fps but rather average overall fps more accurately
         if tot_frames == 5:
@@ -43,11 +33,11 @@ while True:
             tot_frames = 0
             start = time.time()
 
-        # frame = cv2.flip(frame, 1)
+        frame = cv2.flip(frame, 1)
         cv2.putText(frame, f'FPS: {fps}', (20,50), cv2.FONT_HERSHEY_COMPLEX, 1.3, (0,0,255))
 
+        frame = cv2.resize(frame, (1280, 720))
         cv2.imshow('KINECT Video Stream', frame)
-        cv2.setMouseCallback('KINECT Video Stream', click_event)
         output = None
 
     key = cv2.waitKey(1)
