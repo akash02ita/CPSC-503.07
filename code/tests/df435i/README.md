@@ -16,6 +16,7 @@ Python 3.9 is used. As of 17 Nov 2022, python 3.9 is the latest python version s
 
 ## Source
 - https://dev.intelrealsense.com/docs/python2
+- https://realpython.com/python-opencv-color-spaces/ (helped in understanding color segmentation)
 
 
 ## Examples tested

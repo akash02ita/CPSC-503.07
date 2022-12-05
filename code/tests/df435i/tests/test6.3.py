@@ -1,13 +1,7 @@
 """
-    from: test2.py
+    try this source: https://nalinc.github.io/blog/2018/skin-detection-python-opencv/
 
-    TODO: apply 2 hand tracking in mediapipe
-        - if left hand: start color segmentation
-            1) filter only skin color till forearm: background shoudl be removed
-            2) filter depth image as well: background should be removed
-        - if right hand: that will be used for touching
-            - TODO: distinguish between hover and touch
-
+    this one also works pretty well: although background is green
 """
 
 # improvement of working_example1.py
@@ -94,6 +88,42 @@ depth_to_disparity = rs.disparity_transform(True)
 disparity_to_depth = rs.disparity_transform(False)
 
 
+# lower and upper (h)ue (s)aturation and (v)alue
+la, lb, lc = [0,133,77]
+ua, ub, uc = [235,173,127]
+limg = np.zeros((100,100,3), np.uint8)
+himg = np.zeros((100,100,3), np.uint8)
+
+
+# create trackbar list window
+cv2.namedWindow("trackbar hsv", cv2.WINDOW_NORMAL)
+cv2.resizeWindow("trackbar hsv", 800, 300)
+cv2.createTrackbar("la", "trackbar hsv", 0, 255, lambda _: None)
+cv2.createTrackbar("lb", "trackbar hsv", 0, 255, lambda _: None)
+cv2.createTrackbar("lc", "trackbar hsv", 0, 255, lambda _: None)
+cv2.createTrackbar("ua", "trackbar hsv", 179, 255, lambda _: None)
+cv2.createTrackbar("ub", "trackbar hsv", 255, 255, lambda _: None)
+cv2.createTrackbar("uc", "trackbar hsv", 255, 255, lambda _: None)
+
+cv2.setTrackbarPos("la", "trackbar hsv", 0)
+cv2.setTrackbarPos("lb", "trackbar hsv", 133)
+cv2.setTrackbarPos("lc", "trackbar hsv", 77)
+cv2.setTrackbarPos("ua", "trackbar hsv", 235)
+cv2.setTrackbarPos("ub", "trackbar hsv", 173)
+cv2.setTrackbarPos("uc", "trackbar hsv", 127)
+
+lower_flag = [False, None, None]
+upper_flag = [False, None, None]
+
+def set_bounds_on_click(event,x,y,flags,param):
+    global lower_flag, upper_flag
+    if event == cv2.EVENT_LBUTTONDBLCLK:
+        lower_flag = [True, x, y]
+    if event == cv2.EVENT_RBUTTONDBLCLK:
+        upper_flag = [True, x, y]
+    pass
+
+
 # Streaming loop
 try:
     tot_frames = 0
@@ -104,6 +134,21 @@ try:
     depth_meters = 0
 
     while True:
+        la = cv2.getTrackbarPos("la", "trackbar hsv")
+        lb = cv2.getTrackbarPos("lb", "trackbar hsv")
+        lc = cv2.getTrackbarPos("lc", "trackbar hsv")
+        ua = cv2.getTrackbarPos("ua", "trackbar hsv")
+        ub = cv2.getTrackbarPos("ub", "trackbar hsv")
+        uc = cv2.getTrackbarPos("uc", "trackbar hsv")
+        lsquare = np.full((200,200,3), [la, lb, lc], dtype=np.uint8)
+        usquare = np.full((200,200,3), [ua, ub, uc], dtype=np.uint8)
+        lsquare = cv2.cvtColor(lsquare, cv2.COLOR_YCR_CB2BGR)
+        usquare = cv2.cvtColor(usquare, cv2.COLOR_YCR_CB2BGR)
+        cv2.imshow("lower bound color", lsquare)
+        cv2.imshow("upper bound color", usquare)
+
+
+
         temp_start = time.time()
         # Get frameset of color and depth
         frames = pipeline.wait_for_frames() # frames.get_depth_frame() is a 640x480 depth image
@@ -113,12 +158,7 @@ try:
         depth_image = cv2.flip(depth_image, 1)
         cv2.imshow("depth-before-processing-and-alignment", depth_image)
 
-        # https://github.com/IntelRealSense/librealsense/issues/2116: this does not help: get_distance seems out of range. Also it is best to post-process before aligning
-        # https://github.com/IntelRealSense/librealsense/issues/2356: this helps more
-
-        # Align the depth frame to color frame
-        # aligned_frames = align.process(frames)
-        # processign follows pattern of 'https://github.com/IntelRealSense/librealsense/blob/jupyter/notebooks/depth_filters.ipynb', putting everything together
+        # apply processing
         processed_frame = frames
         processed_frame = decimation.process(processed_frame).as_frameset()
         processed_frame = depth_to_disparity.process(processed_frame).as_frameset()
@@ -152,64 +192,42 @@ try:
         color_image = np.asanyarray(color_frame.get_data())
 
         image = color_image
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB) # only in this format of coloring mediapipe is able to track and find hands
-        results = hands.process(image)
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR) # restore color after being done processing image
-        if results.multi_hand_landmarks:
-            hand_labels = []
-            print("\t\tBegin results")
-            print(results.multi_handedness) # contains the informatino we need
-            # since image is not flipped: label: 'left' means user's right hand
-            for idx, hand_handedness in enumerate(results.multi_handedness):
-                # print(
-                #     f'idx: {idx}\n'
-                #     f'hand_handedness.classification[0].index: {hand_handedness.classification[0].index}\n' # int
-                #     f'hand_handedness.classification[0].score: {hand_handedness.classification[0].score}\n' # float
-                #     f'hand_handedness.classification[0].label: {hand_handedness.classification[0].label}\n' # str
-                # )
-                hand_labels.append(hand_handedness.classification[0].label)
 
-            print("\t\tEnd results")
-            # time.sleep(0.3)
-            image_height, image_width, _ = image.shape
-            # for hand_landmarks in results.multi_hand_landmarks:
-            for i in range(len(results.multi_hand_landmarks)):
-                print("i is ", i)
-                hand_landmarks = results.multi_hand_landmarks[i]
-                x = hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP].x * image_width
-                y = hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP].y * image_height
+        # experiment bitwise masks here
+        image = cv2.cvtColor(image,cv2.COLOR_BGR2YCR_CB)
 
-                cv2.circle(image, (int(x),int(y)), radius=10, color=(0, 0, 255), thickness=-1)
+        # https://stackoverflow.com/questions/58624628/how-do-i-even-out-the-lighting-in-colored-images
+        image = cv2.GaussianBlur(image, (5,5), 0)
+        image = cv2.medianBlur(image,5)
 
-                if hand_labels[i] == 'Right': # do not draw landmarks for users 'left' hand
-                    continue
+        if lower_flag[0]:
+            _,x,y = lower_flag
+            print("lower", x, y, image[y, x])
+            h,s,v = image[y, x]
+            cv2.setTrackbarPos("la", "trackbar hsv", h)
+            cv2.setTrackbarPos("lb", "trackbar hsv", s)
+            cv2.setTrackbarPos("lc", "trackbar hsv", v)
+            lower_flag[0] = False
+        if upper_flag[0]:
+            _,x,y = upper_flag
+            print("upper", x, y, image[y, x])
+            h,s,v = image[y, x]
+            cv2.setTrackbarPos("ua", "trackbar hsv", h)
+            cv2.setTrackbarPos("ub", "trackbar hsv", s)
+            cv2.setTrackbarPos("uc", "trackbar hsv", v)
+            upper_flag[0] = False
 
-                # Validate that both frames are valid
-                if not color_frame:
-                    print("ERROR: NOT EXISTING VALID VALUES. color_frame unsuccessful")
-                    pass
-                if not aligned_depth_frame:
-                    print("ERROR: NOT EXISTING VALID VALUES. aligned_depth_frame unsuccessful")
-                    pass
-                
-                if color_frame and aligned_depth_frame and 0 <= x <= image_width and 0 <= y <= image_height:
-                    dist = aligned_depth_frame.get_distance(int(x), int(y))
-                    depth_meters = round(dist, 4)
-                    # print("\tDepth of index finger:", dist)
-                    pass
-                elif not color_frame or not aligned_depth_frame:
-                    pass
-                else:
-                    print("IGNORE out of bound (x,y)")
-                    pass
+        # applyt bitmask operation
+        min_YCrCb = np.array([la, lb, lc],np.uint8)
+        max_YCrCb = np.array([ua, ub, uc],np.uint8)
+        # min_YCrCb = np.array([0,133,77],np.uint8)
+        # max_YCrCb = np.array([235,173,127],np.uint8)
+        mask = cv2.inRange(image,min_YCrCb,max_YCrCb)
 
-                # draw the hand landmarks on image
-                mp_drawing.draw_landmarks(
-                    image,
-                    hand_landmarks,
-                    mp_hands.HAND_CONNECTIONS
-                )
-
+        image = cv2.bitwise_and(image, image, mask = mask)
+        
+        image = cv2.medianBlur(image, 5)
+        image = cv2.cvtColor(image,cv2.COLOR_YCR_CB2BGR)
         # instead of re-calculating fps too frequenty take more frames
             # we don't want instanteneous fps but rather average overall fps more accurately
         if tot_frames == 5:
@@ -223,6 +241,7 @@ try:
         cv2.putText(image, f'FPS: {fps}', (20,50), cv2.FONT_HERSHEY_COMPLEX, 1.3, (0,0,255))
         cv2.putText(image, f'DEPTH: {depth_meters}m', (300,50), cv2.FONT_HERSHEY_COMPLEX, 1.3, (255,0,0))
         cv2.imshow("image", image)
+        cv2.setMouseCallback("image", set_bounds_on_click)
         
         depth_image = cv2.flip(depth_image, 1)
         depth_image = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET)
