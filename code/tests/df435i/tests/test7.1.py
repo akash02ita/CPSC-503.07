@@ -265,7 +265,6 @@ try:
                     mask = cv2.GaussianBlur(mask, (3,3), 0)
                     image = cv2.bitwise_and(image, image, mask = mask)
                     image = cv2.medianBlur(image, 5)
-                    image = cv2.cvtColor(image, cv2.COLOR_HSV2BGR)
                     
                     # STEP1: remove corresponding background in depth
 
@@ -278,21 +277,18 @@ try:
 
                     # efficient approach: use numpy methods to have fast process
                     """
+                    NOTE: seems like [0,0,0] in HSV model corresponds to [0,0,0] in BGR model space. So it just still works fine
+                    Although to be save still doing conversino to cv2.COLOR_HSV2BGR after doing background removal, just to be safe.
+
                     # this approach sets condition elemetns to true when pixel is NOT BLACK
                         # so we are filtering and selectin only NON-BLACK pixels
                         # so in np.where x=depth_image numpyarray and y = 0numpyarray
                         # since np.where yields x when true and y when false, x = depth_image and y = 0
                     """
                     condition = image != 0 # select NON-BLACK pixels
-                    # print("image is ", image)
-                    # image.shape = condition.shape = 480,640,3
-                    # but it should be 480,640,1 which is same as 480,640 = depth_image.shape
                     condition = condition.any(axis = 2) # so if ANY of the 3 bgr pixels entries are != 0, then pixel is NON-BLACK
-                    # print("condition is", condition)
-                    # print("are all true: ", condition.all())
-                    # print("are any true: ", condition.any())
                     depth_image = np.where(condition, depth_image, 0)
-                    # print((depth_image == 0).all())
+
                     """
                     Doesn't matter which approach is used, but using the above one.
                     # an equivalent approach of above
@@ -303,6 +299,7 @@ try:
                     condition = condition.all(axis = 2) # a pixel is black if ALL it's 3 bgr entries are 0
                     depth_image = np.where(condition, 0, depth_image)
                     """
+                    image = cv2.cvtColor(image, cv2.COLOR_HSV2BGR)
 
 
 
