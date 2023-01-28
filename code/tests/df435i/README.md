@@ -14,7 +14,7 @@ Python 3.9 is used. As of 17 Nov 2022, python 3.9 is the latest python version s
 5. now you can safely use python 3.9 in the virtual environment without conflicting with other python versions installed in your system, if there are 
 
 
-## Source
+## Sources
 - https://dev.intelrealsense.com/docs/python2
 - https://realpython.com/python-opencv-color-spaces/ (helped in understanding color segmentation)
 
@@ -23,3 +23,11 @@ Python 3.9 is used. As of 17 Nov 2022, python 3.9 is the latest python version s
 - `examples/working_example1.py`: a normal hand tracking approach with no post-processing. This seems to give issues of frequent inaccurate values, due to depth noise and possible amount of 'holes'.
 - `examples/working_example2.py`: better than before and seems like post-processing helps on getting better and more accurate values. Frame rate seems still around 30fps.
   - `tests/test4.py` can be visited to see also the depth frames before and after processing and alignment.
+- `examples/working_example3.py`: implementation of detecting _hover or touch_ of index finger on skin color like surface.
+
+## Recordings
+Recodings are uploaded in the following links:
+
+- `examples/working_example1.py`: https://youtu.be/bpqYMhNgOrE
+- `examples/working_example3.py`: https://youtu.be/MadIhRYcWRc
+
