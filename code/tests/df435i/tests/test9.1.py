@@ -349,33 +349,39 @@ try:
             if depth_meters == 0:
                 continue
             x, y = int(right_index_finger_tip_x), int(right_index_finger_tip_y)
-            dx, dy = 10, 10
+            # dx, dy = 10, 10
             # dx, dy = 15, 15
-            # dx = dy = int(8/depth_meters)
+            dx = dy = int(8/depth_meters) # approximated size of fingertip relative to distance
             square = depth_image[y-dy:y+dy, x-dx:x+dx]
             der_square = derivative_depth_image[y-dy:y+dy, x-dx:x+dx]
-            cv2.rectangle(image, (x-dx,y-dy), (x+dx,y+dy), (255,255,0), 2)                
+            dyy = int(dy * 1.3)
+            dxx = int(dx * 1.3)
+            square_flood_fill = depth_image[y-dyy:y+dyy, x-dxx:x+dxx]
+            cv2.rectangle(image, (x-dx,y-dy), (x+dx,y+dy), (255,255,0), 1)                
+            cv2.rectangle(image, (x-dxx,y-dyy), (x+dxx,y+dyy), (0,255,0), 1)                
 
-            print("der_squre is ", der_square)
-            print("finger der depth is ", derivative_depth_image[y,x])
+            # print("der_squre is ", der_square)
+            # print("finger der depth is ", derivative_depth_image[y,x])
             fdder = derivative_depth_image[y,x]
             image = cv2.flip(image, 1)
             cv2.putText(image, f"index: {fdder}", (200, 400), cv2.FONT_HERSHEY_COMPLEX, 1.3, (255,0,255), 2)
             image = cv2.flip(image, 1)
-            print()
+            # print()
             if ((square == 0).all() or (square == 0).sum() >= int(dx*dy*0.95)): # PASS 1 check if finger is away from forearm
                 image = cv2.flip(image, 1)
                 # print("Finger away") 
                 cv2.putText(image, "away", (50, 400), cv2.FONT_HERSHEY_COMPLEX, 1.3, (255,0,255), 2)
                 image = cv2.flip(image, 1)
             # elif ((der_square == 0).all() or (der_square == 0).sum() >= int(dx*dy*0.98)): # PASS 2 check if finger is touching
-            elif ((der_square == 0).all() or (abs(der_square - fdder) <= 8).sum() >= int(dx*dy*0.90)): # PASS 2 check if finger is touching
+            elif (((der_square == 0).all() or (abs(der_square - fdder) <= 8).sum() >= int(dx*dy*0.90))) and ((abs(square_flood_fill - np.average(square_flood_fill)) <= 1).sum() >= int(dx*dy*0.90)): # PASS 2 check if finger is touching
+            # elif (((der_square == 0).all() or (abs(der_square - fdder) <= 8).sum() >= int(dx*dy*0.90))) and ((abs(square - np.average(square)) <= 1).sum() >= int(dx*dy*0.90)): # PASS 2 check if finger is touching
             # elif ((der_square == 0).all() or (der_square == 0).sum() >= int(dx*dy*0.90)): # PASS 2 check if finger is touching
             # elif ((der_square == 0).all() or (der_square == 0).sum() >= int(dx*dy*0.95)): # PASS 2 check if finger is touching
                 image = cv2.flip(image, 1)
                 # print("Finger touching") 
                 cv2.putText(image, "touch", (50, 400), cv2.FONT_HERSHEY_COMPLEX, 1.3, (255,0,255), 2)
                 image = cv2.flip(image, 1)
+                print(f"np.average(square) is {np.average(square)}")
             else:
                 image = cv2.flip(image, 1)
                 # print("Finger Hovering") 
